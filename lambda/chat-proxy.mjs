@@ -4,11 +4,24 @@ const client = new S3Client({});
 
 const bucket = 'shraddha-chatwebapp';
 
-export const handler = async function () {
+export const handler = async function (event, context) {
+    const path = event.pathParameters.proxy;
+
+    let key = undefined;
+
+    if (path === 'conversations') {
+        key = 'data/conversations.json'
+    } else if (path.startsWith('conversations/')) {
+        const id = path.substring('conversations/'.length);
+        key = 'data/conversations/' + id + '.json';
+    } else {
+        return done('No cases hit');
+    }
+
     try {
         const response = await client.send(new GetObjectCommand({
             Bucket: bucket,
-            Key: 'data/conversations.json'
+            Key: key
         }));
         return done(null, JSON.parse(await response.Body.transformToString()));
     } catch (e) {
